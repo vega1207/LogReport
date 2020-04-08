@@ -1,0 +1,8 @@
+﻿运行程序注意事项：
+1. 可以将程序copy到任意地方
+2. 将要处理的文件尽量放置在文件内（放在外部也可以）
+3. 先加载EOL Path，再点击"EOL Builder"
+4. 加载Hipot Path， 再点击"Hipot Builder"
+5. 每个文件夹最多只能放置250个文件，超过会提示
+6. 所有文件均保存在同一"Test report template Inverter JLR D8.xls"，建议每次将生成的报告剪切处理
+6. GRR是不过滤重复文件生成的报告，也会保存在"Test report template Inverter JLR D8.xls"中。
