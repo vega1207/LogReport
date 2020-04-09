@@ -210,14 +210,14 @@ class Report:
         f.close()
 
     def create_mysqldatabasetable(self):
-        conn = pymysql.connect(host='localhost', port=3306, user='root', passwd='mysql', db='jlr_eol')
+        # conn = pymysql.connect(host='localhost', port=3306, user='root', passwd='mysql', db='jlr_eol')
+        # cur = conn.cursor()
+        ################# create database jlr_eol##############################
+        conn = pymysql.connect(host='localhost', port=3306, user='root', passwd='mysql')
         cur = conn.cursor()
-    ################## create database jlr_eol##############################
-    # conn = pymysql.connect(host='localhost', port=3306, user='root', passwd='mysql')
-    # cur = conn.cursor()
-        # sql = 'create database jlr_eol charset=utf8'
-        # cur.execute(sql)
-    ###################create table loglist#################################
+        sql = 'create database psa_eol charset=utf8'
+        cur.execute(sql)
+        ##################create table loglist#################################
     
         sql = 'create table loglist(ID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT, PPID varchar(30), TestItem varchar(30), MeasureValue varchar(30), Result varchar(30), DateTime varchar(30))'
         cur.execute(sql)
@@ -412,7 +412,9 @@ def HipotData_To_Report(passpath=''):
 
 if __name__ == '__main__':
   # GRR_Data()
-  Customer_Report('C:/python37/projects/LogReport/EOL1')
+  # Customer_Report('C:/python37/projects/LogReport/EOL1')
   # HipotData_To_Report('C:/python37/projects/LogReport/PASS-Hipot')
+  report = Report()
+  report.create_mysqldatabasetable()
 
 
