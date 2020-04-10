@@ -6,8 +6,11 @@ import tkinter.messagebox
 from tkinter.filedialog import askdirectory
 from CustomerReportBuilding import *
 import threading
+from threading import RLock
 import glob
-import numpy as np
+
+LOCK = RLock()
+
 
 class App():
   
@@ -92,67 +95,70 @@ class App():
       return len(path_file_number)
     
     def Hipot_Builder():
-      # start_time = time.process_time()
-      HipotPath = Entry_Hipot.get()
-      if len(HipotPath) >0:
-        try:
-          if HipotData_To_Report(HipotPath) ==None:
-            # print("Total running time: ",time.process_time() - start_time)
-            status['text'] ='Hipot report well done!'
-            status['bg'] = 'green'
-            return tkinter.messagebox.showinfo("Good","Hipot data finished!")
-          else:
-            return tkinter.messagebox.showinfo("Warnning","Some test items missed in the log!")
-        except FileNotFoundError:
-          status['text'] ='waiting for your select...'
-          status['bg'] = '#c0ded9'
-          tkinter.messagebox.showinfo("Warnning","Please select correctly path...")
+      with LOCK:
+        # start_time = time.process_time()
+        HipotPath = Entry_Hipot.get()
+        if len(HipotPath) >0:
+          try:
+            if HipotData_To_Report(HipotPath) ==None:
+              # print("Total running time: ",time.process_time() - start_time)
+              status['text'] ='Hipot report well done!'
+              status['bg'] = 'green'
+              return tkinter.messagebox.showinfo("Good","Hipot data finished!")
+            else:
+              return tkinter.messagebox.showinfo("Warnning","Some test items missed in the log!")
+          except FileNotFoundError:
+            status['text'] ='waiting for your select...'
+            status['bg'] = '#c0ded9'
+            tkinter.messagebox.showinfo("Warnning","Please select correctly path...")
+            return False
+        else:
+          tkinter.messagebox.showinfo("Warnning","Please select the Hipot path!")
           return False
-      else:
-        tkinter.messagebox.showinfo("Warnning","Please select the Hipot path!")
-        return False
 
     def EOL_Builder():
-      # start_time = time.process_time()
-      EOLPath = Entry_EOL.get()
-      if len(EOLPath) >0:
-        try:
-          if Customer_Report(EOLPath) ==None:
-            # print("Total running time: ",time.process_time() - start_time)
-            status['text'] ='EOL report well done!'
-            status['bg'] = 'green'
-            return tkinter.messagebox.showinfo("Good","EOL data finished!")
-          else:
-            return tkinter.messagebox.showinfo("Warnning","Some test items missed in the log!")
-        except FileNotFoundError:
-          status['text'] ='waiting for your select...'
-          status['bg'] = '#c0ded9'
-          tkinter.messagebox.showinfo("Warnning","Please select correctly path...")
+      with LOCK:
+        # start_time = time.process_time()
+        EOLPath = Entry_EOL.get()
+        if len(EOLPath) >0:
+          try:
+            if Customer_Report(EOLPath) ==None:
+              # print("Total running time: ",time.process_time() - start_time)
+              status['text'] ='EOL report well done!'
+              status['bg'] = 'green'
+              return tkinter.messagebox.showinfo("Good","EOL data finished!")
+            else:
+              return tkinter.messagebox.showinfo("Warnning","Some test items missed in the log!")
+          except FileNotFoundError:
+            status['text'] ='waiting for your select...'
+            status['bg'] = '#c0ded9'
+            tkinter.messagebox.showinfo("Warnning","Please select correctly path...")
+            return False
+        else:
+          tkinter.messagebox.showinfo("Warnning","Please select the EOL path!")
           return False
-      else:
-        tkinter.messagebox.showinfo("Warnning","Please select the EOL path!")
-        return False
     
     def GRR_Builder():
-      # start_time = time.process_time()
-      GRRPath = Entry_GRR.get()
-      if len(GRRPath) >0:
-        try:
-          if GRR_Data(GRRPath) ==None:
-            # print("Total running time: ",time.process_time() - start_time) 
-            status['text'] ='GRR report well done!'
-            status['bg'] = 'green'
-            return tkinter.messagebox.showinfo("Good","GRR data finished!")
-          else:
-            return tkinter.messagebox.showinfo("Warnning","Some test items missed in the log!")
-        except FileNotFoundError:
-          status['text'] ='waiting for your select...'
-          status['bg'] = '#c0ded9'
-          tkinter.messagebox.showinfo("Warnning","Please select correctly path...")
+      with LOCK:
+        # start_time = time.process_time()
+        GRRPath = Entry_GRR.get()
+        if len(GRRPath) >0:
+          try:
+            if GRR_Data(GRRPath) ==None:
+              # print("Total running time: ",time.process_time() - start_time) 
+              status['text'] ='GRR report well done!'
+              status['bg'] = 'green'
+              return tkinter.messagebox.showinfo("Good","GRR data finished!")
+            else:
+              return tkinter.messagebox.showinfo("Warnning","Some test items missed in the log!")
+          except FileNotFoundError:
+            status['text'] ='waiting for your select...'
+            status['bg'] = '#c0ded9'
+            tkinter.messagebox.showinfo("Warnning","Please select correctly path...")
+            return False
+        else:
+          tkinter.messagebox.showinfo("Warnning","Please select the GRR path!")
           return False
-      else:
-        tkinter.messagebox.showinfo("Warnning","Please select the GRR path!")
-        return False
       
     #=======================================================Threading=================================================================
     def EOLpathThreading():

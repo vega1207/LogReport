@@ -1,13 +1,9 @@
-import time
 import sqlite3
-import threading
 from DBUtils.PooledDB import PooledDB, SharedDBConnection
-import datetime
 from threading import RLock
-import json
+import datetime
 
 LOCK = RLock()
-
 POOL = PooledDB(
     creator=sqlite3,  # 使用链接数据库的模块
     maxconnections=6,  # 连接池允许的最大连接数，0和None表示不限制连接数
@@ -19,10 +15,9 @@ POOL = PooledDB(
     setsession=[],  # 开始会话前执行的命令列表。如：["set datestyle to ...", "set time zone ..."]
     ping=0,
     # ping MySQL服务端，检查是否服务可用。# 如：0 = None = never, 1 = default = whenever it is requested, 2 = when a cursor is created, 4 = when a query is executed, 7 = always
-    database='EOL.db'
-)
+    database='jlr_eol.db')  #需要手动创建一个db文件
 
-class Db(object):
+class Db:
 
   def __init__(self):
     # 检测当前正在运行连接数的是否小于最大链接数，如果不小于则：等待或报raise TooManyConnections异常
@@ -47,7 +42,6 @@ class Db(object):
     with LOCK:
       self.cursor.execute(sql)
       result = self.cursor.fetchone()
-      print(result)
       self.conn.close()
       return result
 
@@ -55,13 +49,12 @@ class Db(object):
     with LOCK:
       self.cursor.execute(sql)
       result = self.cursor.fetchall()
-      # print(result)
       self.conn.close()
       return result
 
   def get_measure_value(self,log_name,test_item):
     with LOCK:
-      data = self.fetch_all("select * from psa where log_name='%s'"%log_name)
+      data = self.fetch_all("select * from loglist where PPID='%s'"%log_name)
       get_csv_testitems = []
       get_csv_testitems_result = []
       for row in data:
@@ -69,83 +62,76 @@ class Db(object):
       for row in data:
           get_csv_testitems_result.append(row[3])
       data_combine = dict(zip(get_csv_testitems, get_csv_testitems_result))
-      return data_combine[test_item]
+      return data_combine[test_item]  
 
-  def test_add(self,passpath=''):
+  def from_logname_get_allvalue(self,log_name):
     with LOCK:
-      from CustomerReportBuilding import Report,CSV_List
-      csv_list = CSV_List(passpath)
-      Final_CSV_List = csv_list.get_nonrepeateCSV()
-      for i,filename in enumerate(Final_CSV_List):
-        pathx = passpath + "/" + filename
-        report = Report(passpath)
-        data = report.csv_read(pathx)
-        data_combine = report.dict_factorary(data)
-        input_list  = list(data_combine)
-        # print(data_combine )
-        for i in input_list :
-          # I recommend putting this inside a function, this way if this 
-          # Evaluates to None at the end of the loop, you can exit without doing an insert
-          if i :
-              input_dict = i 
-          else:
-              input_dict = None
-              continue
+      data = self.fetch_all("select * from loglist where PPID='%s'"%log_name)
+      return data 
 
-        keylist = list(data_combine.keys())
-        vallist = list(data_combine.values())
+  def from_db_get_select_testitem(self,name):
+    with LOCK:
+      data = self.fetch_all("select * from loglist where TestItem='%s'"%name)
+      return data 
 
-        query = 'INSERT INTO demo (' +','.join( ['[' + i + ']' for i in keylist]) + ') VALUES (' + ','.join(['?' for i in vallist]) + ')'
-        items_to_insert = list(tuple(x.get(i , '') for i in keylist) for x in input_list)
-        # print(keylist)
-        self.cursor.executemany(query , items_to_insert)
+  def create_mysqldatabasetable(self):
+      conn = sqlite3.connect('jlr_eol.db')   #手动先创建一个jlr_eol.db文件
+      cur = conn.cursor()
+      sql = 'create table loglist(ID INTEGER PRIMARY KEY AUTOINCREMENT, PPID varchar(30), TestItem varchar(30), MeasureValue varchar(30), Result varchar(30), DateTime varchar(30))'
+      cur.execute(sql)
+
+  def mysqldata(self, log_name, dict_data):
+    with LOCK:
+      now = datetime.datetime.now()
+      # sql = "INSERT into loglist(ID,PPID,TestItem,MeasureValue,Result,DateTime) values(%s,%s,%s,%s,%s,%s)"
+      sql = "INSERT into loglist(ID,PPID,TestItem,MeasureValue,Result,DateTime) values(?,?,?,?,?,?)"
+      val_eol = (
+      (None,log_name, 'Sleep Power Current Measure', dict_data['Sleep Power Current Measure'], 'PASS', now),
+      (None,log_name, 'Standby Power Current Measure', dict_data['Standby Power Current Measure'], 'PASS', now),
+      (None, log_name, 'Read FTEAEXC_UResExcAvg', dict_data['Read FTEAEXC_UResExcAvg'], 'PASS', now),
+      (None, log_name, 'Read MAIN_VSIRxsGridVoltW', dict_data['Read MAIN_VSIRxsGridVoltW'], 'PASS', now),
+      (None, log_name, 'Read T_Iuvw3_U16[0]', dict_data['Read T_Iuvw3_U16[0]'], 'PASS', now),
+      (None, log_name, 'Read T_Iuvw3_U16[1]', dict_data['Read T_Iuvw3_U16[1]'], 'PASS', now),
+      (None, log_name, 'Read T_Iuvw3_U16[2]', dict_data['Read T_Iuvw3_U16[2]'], 'PASS', now),
+      (None, log_name, 'Read FS_IbatHV_U16', dict_data['Read FS_IbatHV_U16'], 'PASS', now),
+      (None, log_name, 'Read HV_FS_FaultLevel_U16', dict_data['Read HV_FS_FaultLevel_U16'], 'PASS', now),
+      (None, log_name, 'Read FSEABHV_UbatHV', dict_data['Read FSEABHV_UbatHV'], 'PASS', now),
+      (None, log_name, 'Read FSMAPMT_PmTemp', dict_data['Read FSMAPMT_PmTemp'], 'PASS', now),
+      (None, log_name, 'Read FSMADBT_DboardTemp', dict_data['Read FSMADBT_DboardTemp'], 'PASS', now),
+      (None, log_name, 'Read FSMACBT_CboardTempHV', dict_data['Read FSMACBT_CboardTempHV'], 'PASS', now),
+      (None, log_name, 'Read FSMACBT_CboardTempLV', dict_data['Read FSMACBT_CboardTempLV'], 'PASS', now),
+      (None, log_name, 'Read FSMAICT_CoolingTemp', dict_data['Read FSMAICT_CoolingTemp'], 'PASS', now),
+      (None, log_name, 'Read FSMAMST_StatorTemp1', dict_data['Read FSMAMST_StatorTemp1'], 'PASS', now),
+      (None, log_name, 'Read FSMAMST_StatorTemp2', dict_data['Read FSMAMST_StatorTemp2'], 'PASS', now),
+      (None, log_name, 'Resolver excitation', dict_data['Resolver excitation'], 'PASS', now),
+      (None, log_name, 'Read FT_ResolverSin_U16 Max', dict_data['Read FT_ResolverSin_U16 Max'], 'PASS', now),
+      (None, log_name, 'Read FT_ResolverSin_U16 Min', dict_data['Read FT_ResolverSin_U16 Min'], 'PASS', now),
+      (None, log_name, 'Read FT_ResolverCos_U16 Max', dict_data['Read FT_ResolverCos_U16 Max'], 'PASS', now),
+      (None, log_name, 'Read FT_ResolverCos_U16 Min', dict_data['Read FT_ResolverCos_U16 Min'], 'PASS', now),
+      (None, log_name, 'Switch Measure Current', dict_data['Switch Measure Current'], 'PASS', now),
+      (None, log_name, 'Active discharge time', dict_data['Active discharge 450V to 60V'], 'PASS', now),
+      (None, log_name, 'Passive discharge time', dict_data['Passive discharge 450V to 60V'], 'PASS', now),
+      (None, log_name, 'Read Dcs_bMot Current', dict_data['Read Dcs_bMot Measure Current'], 'PASS', now),
+      (None, log_name, 'Read Pls_bMot Current', dict_data['Read Pls_bMot Measure Current'], 'PASS', now),
+      (None, log_name, 'Read Interlock status', dict_data['Read MAIN_MSGu8InverterHVILStatus'], 'PASS', now),
+      (None, log_name, 'FSMABLV_UbatLVCorGainC', dict_data['Read FSMABLV_UbatLVCorGainC'], 'PASS', now),
+      (None, log_name, 'FSMABLV_UbatLVCorOffsetC', dict_data['Read FSMABLV_UbatLVCorOffsetC'], 'PASS', now),
+      (None, log_name, 'HV_CorGainC', dict_data['Read HV_CorGainC'], 'PASS', now),
+      (None, log_name, 'HV_CorOffsetC', dict_data['Read HV_CorOffsetC'], 'PASS', now),
+      (None, log_name, 'FTEAMPI_A2DGainIsuLC', dict_data['Read FTEAMPI_A2DGainIsuLC'], 'PASS', now),
+      (None, log_name, 'FTEAMPI_A2DGainIsvLC', dict_data['Read FTEAMPI_A2DGainIsvLC'], 'PASS', now),
+      (None, log_name, 'FTEAMPI_A2DGainIswLC', dict_data['Read FTEAMPI_A2DGainIswLC'], 'PASS', now),
+      (None, log_name, 'SAMTLCS_A2DGainIsuLC', dict_data['Read SAMTLCS_A2DGainIsuLC'], 'PASS', now),
+      (None, log_name, 'SAMTLCS_A2DGainIsvLC', dict_data['Read SAMTLCS_A2DGainIsvLC'], 'PASS', now),
+      (None, log_name, 'SAMTLCS_A2DGainIswLC', dict_data['Read SAMTLCS_A2DGainIswLC'], 'PASS', now))
+
+      self.cursor.executemany(sql, val_eol)
+      self.conn.commit()
 
 
-
-
-
-
-
-
-
-
-        # dict_xu = json.dumps(data_combine)    #将字典json序列化就可以保存在sqlite3
-        # print (dict_xu)
-        # now = datetime.datetime.now()
-        # for key in data_combine:
-        #   value = data_combine[key]
-          
-
-      # sql = "INSERT INTO psa VALUES('None','test','items','test','pass','12345678')"
-      # sql = "INSERT INTO psa (id,log_name,test_item,measure_value,Result,date_time) VALUES(?,?,?,?,?,?)"
-          
-          # sql = "INSERT INTO psa VALUES(?,?,?,?,?,?)"
-          # value2 = [(None,'log_name', key, value, 'PASS', now)]
-          # self.cursor.execute(sql,value2)
-  
-        # self.cursor.execute('INSERT into psa values (?,?,?,?,?,?)',[None,'logname',data_combine['TestItem'], data_combine['Read FTEAEXC_UResExcAvg'], data_combine['Read MAIN_VSIRxsGridVoltW'],now])
-        # self.conn.commit()
-        # self.conn.close()
-
-            
-
-
-
-
-
-
-    
-
-
-  
-
-if __name__ == '__main__':  
-  db = Db()
-  # db.fetch_one('select * from psa')
-  # db.log_name_get('lucas')
-  # db.get_measure_value('sean','顶顶顶顶顶顶顶')
-  # db.fetch_all('select * from psa')
-  db.test_add(r'C:\python37\projects\LogReport\EOL1')
-  # import json
-  # sss = json.dump(ddd)
-  # print (sss)
+if __name__ == '__main__':
+    db = Db()
+    # result = db.get_measure_value('EOL_!192780029!_V29113441__20191229_040551.csv','Sleep Power Current Measure')
+    # print(result)
+    # print(db.from_logname_get_allvalue('EOL_!192780029!_V29113441__20191229_040551.csv'))
+    print(db.from_db_get_select_testitem('SAMTLCS_A2DGainIsuLC'))
