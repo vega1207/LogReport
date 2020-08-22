@@ -5,4 +5,6 @@
 4. 加载Hipot Path， 再点击"Hipot Builder"
 5. 每个文件夹最多只能放置250个文件，超过会提示
 6. 所有文件均保存在同一"Test report template Inverter JLR D8.xls"，建议每次将生成的报告剪切处理
-6. GRR是不过滤重复文件生成的报告，也会保存在"Test report template Inverter JLR D8.xls"中。
+7. EOL list中没有对应的Hipot文件会自动保存在error list.csv中，可以查看
+8. GRR是不过滤重复文件生成的报告，也会保存在"Test report template Inverter JLR D8.xls"中。
+9. 增加了数据库保存，如有必要可以打开查看

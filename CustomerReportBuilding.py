@@ -1,18 +1,20 @@
 # coding=UTF-8
 import csv
-import xlrd
-import xlwt
-import os
-from xlutils.copy import copy
-from os import listdir
-import shutil
-import pymysql
 import datetime
+import os
 import re
-from collections import Counter 
+import shutil
 import time
 import tkinter
 import tkinter.messagebox
+from collections import Counter
+from os import listdir
+from os.path import dirname
+
+import pymysql
+import xlrd
+import xlwt
+from xlutils.copy import copy
 
 
 class Report:
@@ -36,6 +38,7 @@ class Report:
       for row in data:
           get_csv_testitems_result.append(row[1])
       dict_data = dict(zip(get_csv_testitems, get_csv_testitems_result))
+    #   print(dict_data)
       return dict_data
 
     def writetoexcel(self, dict_data,i=0):
@@ -306,9 +309,13 @@ class CSV_List(object):
 ##########################################处理报告函数###################################################
 
 def Customer_Report(passpath=''):
+  del_ini = []
+  del_ini = os.listdir(passpath)
+  for f in del_ini:
+    if f.endswith('.ini'):
+      os.remove(os.path.join( passpath, f ))  
   csv_list = CSV_List(passpath)
   Final_CSV_List = csv_list.get_nonrepeateCSV()
-  # print(Final_CSV_List)
   from db import Db
   db = Db()
   for i,filename in enumerate(Final_CSV_List):
@@ -324,6 +331,11 @@ def Customer_Report(passpath=''):
     db.mysqldata(filename, data_combine)
 
 def GRR_Data(passpath=''):
+  del_ini = []
+  del_ini = os.listdir(passpath)
+  for f in del_ini:
+    if f.endswith('.ini'):
+      os.remove(os.path.join( passpath, f ))
   pathlist = os.listdir(passpath)
   from db import Db
   db = Db()
@@ -338,11 +350,14 @@ def GRR_Data(passpath=''):
       print(e)
       return False
     db.mysqldata(filename, data_combine)
-
 def HipotData_To_Report(passpath=''):
+  del_ini = []
+  del_ini = os.listdir(passpath)
+  for f in del_ini:
+    if f.endswith('.ini'):
+      os.remove(os.path.join( passpath, f ))
   csv_list = CSV_List(passpath)
   Final_CSV_List = csv_list.get_nonrepeateCSV()
-  # print(Final_CSV_List)
   for i,filename in enumerate(Final_CSV_List):
     pathx = passpath + "/" + filename
     report = Report(passpath)
@@ -356,9 +371,7 @@ def HipotData_To_Report(passpath=''):
     # print(data_combine)
 
 if __name__ == '__main__':
-  Customer_Report('C:/python37/projects/LogReport/EOL1')
+  Customer_Report('C:/python37/projects/LogReport/new')
   # HipotData_To_Report('C:/python37/projects/LogReport/PASS-Hipot')
   # db = Db()
   # db.create_mysqldatabasetable()
-
-

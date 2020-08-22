@@ -1,13 +1,14 @@
 # coding=UTF-8
+import glob
 import os
+import threading
+import tkinter.messagebox
+from threading import RLock
 from tkinter import *
 from tkinter import ttk
-import tkinter.messagebox
 from tkinter.filedialog import askdirectory
+
 from CustomerReportBuilding import *
-import threading
-from threading import RLock
-import glob
 
 LOCK = RLock()
 
